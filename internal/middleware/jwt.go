@@ -59,7 +59,6 @@ func jwtSecret() []byte {
 }
 
 func parseJWT(token string, secret []byte) (map[string]any, error) {
-	var claims map[string]any
 	parsedToken, err := jwt.ParseWithClaims(token, jwt.MapClaims{}, func(t *jwt.Token) (any, error) {
 		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
 			return nil, errJWT("unsupported token algorithm")
@@ -79,7 +78,7 @@ func parseJWT(token string, secret []byte) (map[string]any, error) {
 		return nil, errJWT("invalid token")
 	}
 
-	claims = make(map[string]any, len(mapClaims))
+	claims := make(map[string]any, len(mapClaims))
 	for key, value := range mapClaims {
 		claims[key] = value
 	}
