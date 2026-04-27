@@ -1,0 +1,26 @@
+.codex
+
+# Local runtime config
+config.yml
+
+# Go build and test artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+
+# Editor / OS files
+.DS_Store
+.idea/
+.vscode/
