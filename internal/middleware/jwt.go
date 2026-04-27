@@ -3,9 +3,9 @@ package middleware
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
 	"strings"
 
+	"github.com/banyejiu/ruoyi-go/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/viper"
@@ -46,9 +46,7 @@ func JWTAuth() gin.HandlerFunc {
 }
 
 func abortUnauthorized(c *gin.Context, msg string) {
-	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-		"msg": msg,
-	})
+	response.FailAbort(c, response.Unauthorized, msg)
 }
 
 func jwtSecret() []byte {

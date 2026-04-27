@@ -1,12 +1,12 @@
 package middleware
 
 import (
-	"net/http"
 	"runtime/debug"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/banyejiu/ruoyi-go/pkg/logger"
+	"github.com/banyejiu/ruoyi-go/pkg/response"
 )
 
 func Recovery() gin.HandlerFunc {
@@ -28,10 +28,7 @@ func Recovery() gin.HandlerFunc {
 					"request_id", requestID,
 				)
 
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-					"msg":        "internal server error",
-					"request_id": requestID,
-				})
+				response.FailAbort(c, response.InternalError, "Internal Server Error")
 			}
 		}()
 

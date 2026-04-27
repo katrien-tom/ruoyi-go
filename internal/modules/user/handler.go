@@ -1,9 +1,9 @@
 package user
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+
+	"github.com/banyejiu/ruoyi-go/pkg/response"
 )
 
 type Handler struct {
@@ -15,17 +15,17 @@ func NewHandler(s *Service) *Handler {
 }
 
 func (h *Handler) Login(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"msg": "login"})
+	response.SuccessNoMsg(c, "success login")
 }
 
 func (h *Handler) Register(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"msg": "register"})
+	response.SuccessNoMsg(c, "success register")
 }
 
 func (h *Handler) Profile(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"msg": "profile"})
+	response.SuccessNoMsg(c, "success profile")
 }
 
 func (h *Handler) Delete(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"msg": "delete"})
+	response.SuccessNoMsg(c, "success delete")
 }

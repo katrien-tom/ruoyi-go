@@ -27,7 +27,7 @@ func (m *Module) Register(rg *gin.RouterGroup) {
 	// ========================
 	public := rg.Group("/public/user")
 	{
-		public.GET("/login", m.handler.Login)
+		public.POST("/login", m.handler.Login)
 		public.POST("/register", m.handler.Register)
 	}
 
