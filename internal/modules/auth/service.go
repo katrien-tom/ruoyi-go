@@ -2,30 +2,42 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"image/color"
+	"strings"
 	"time"
 
 	"github.com/mojocn/base64Captcha"
 	"github.com/redis/go-redis/v9"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+
+	"github.com/banyejiu/ruoyi-go/internal/modules/user"
+	"github.com/banyejiu/ruoyi-go/pkg/jwtutil"
 )
 
 const captchaTTL = 5 * time.Minute
 
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrAccountDisabled    = errors.New("account disabled")
+)
+
 type Service struct {
-	redis *redis.Client
+	redis          *redis.Client
+	userRepository *user.Repository
+	now            func() time.Time
 }
 
-type CaptchaResponse struct {
-	CaptchaEnabled bool   `json:"captchaEnabled"`
-	Img            string `json:"img"`
-	UUID           string `json:"uuid"`
+func NewService(redisClient *redis.Client, userRepository *user.Repository) *Service {
+	return &Service{
+		redis:          redisClient,
+		userRepository: userRepository,
+		now:            time.Now,
+	}
 }
 
-func NewService(redisClient *redis.Client) *Service {
-	return &Service{redis: redisClient}
-}
-
-func (s *Service) GetCaptcha(ctx context.Context) (*CaptchaResponse, error) {
+func (s *Service) GetCaptcha(ctx context.Context) (*CaptchaVO, error) {
 	driver := base64Captcha.NewDriverMath(
 		48,
 		130,
@@ -45,10 +57,51 @@ func (s *Service) GetCaptcha(ctx context.Context) (*CaptchaResponse, error) {
 		return nil, err
 	}
 
-	return &CaptchaResponse{
+	return &CaptchaVO{
 		CaptchaEnabled: true,
 		Img:            item.EncodeB64string(),
 		UUID:           id,
+	}, nil
+}
+
+func (s *Service) Login(ctx context.Context, req LoginDTO) (*LoginVO, error) {
+	username := strings.TrimSpace(req.Username)
+	if username == "" || req.Password == "" {
+		return nil, ErrInvalidCredentials
+	}
+
+	authUser, err := s.userRepository.FindByUserName(ctx, username)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrInvalidCredentials
+		}
+
+		return nil, err
+	}
+
+	return s.loginUser(req, authUser)
+}
+
+func (s *Service) loginUser(req LoginDTO, authUser *user.SysUser) (*LoginVO, error) {
+	if authUser.Status != "0" {
+		return nil, ErrAccountDisabled
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(authUser.Password), []byte(req.Password)); err != nil {
+		return nil, ErrInvalidCredentials
+	}
+
+	token, err := jwtutil.Sign(authUser.UserID, authUser.UserName, s.now())
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginVO{
+		Token:     token,
+		TokenType: "Bearer",
+		UserID:    authUser.UserID,
+		UserName:  authUser.UserName,
+		NickName:  authUser.NickName,
 	}, nil
 }
 

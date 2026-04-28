@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/banyejiu/ruoyi-go/internal/app"
+	"github.com/banyejiu/ruoyi-go/internal/modules/user"
 )
 
 type Module struct {
@@ -11,7 +12,8 @@ type Module struct {
 }
 
 func NewModule() *Module {
-	service := NewService(app.Global.Redis)
+	repo := user.NewRepository(app.Global.DB)
+	service := NewService(app.Global.Redis, repo)
 	handler := NewHandler(service)
 
 	return &Module{handler: handler}
