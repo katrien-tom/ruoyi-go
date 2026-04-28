@@ -1,4 +1,5 @@
 .codex
+.worktrees/
 
 # Local runtime config
 config.yml
