@@ -22,12 +22,8 @@ func NewModule() *Module {
 // ⭐ 所有路由在这里
 func (m *Module) Register(rg *gin.RouterGroup) {
 
-	// ========================
-	// 1️⃣ 公共接口（不需要权限）
-	// ========================
 	public := rg.Group("/public/user")
 	{
-		public.POST("/login", m.handler.Login)
 		public.POST("/register", m.handler.Register)
 	}
 

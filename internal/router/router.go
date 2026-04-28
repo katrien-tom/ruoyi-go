@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/banyejiu/ruoyi-go/internal/middleware"
+	"github.com/banyejiu/ruoyi-go/internal/modules/auth"
 	"github.com/banyejiu/ruoyi-go/internal/modules/user"
 )
 
@@ -20,6 +21,7 @@ func InitRouter() *gin.Engine {
 
 	// 注册模块
 	modules := []Module{
+		auth.NewModule(),
 		user.NewModule(),
 	}
 

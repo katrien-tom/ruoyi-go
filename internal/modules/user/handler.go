@@ -14,10 +14,6 @@ func NewHandler(s *Service) *Handler {
 	return &Handler{service: s}
 }
 
-func (h *Handler) Login(c *gin.Context) {
-	response.SuccessNoMsg(c, "success login")
-}
-
 func (h *Handler) Register(c *gin.Context) {
 	response.SuccessNoMsg(c, "success register")
 }
