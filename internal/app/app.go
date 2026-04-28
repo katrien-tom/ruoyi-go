@@ -18,8 +18,3 @@ func Init(db *gorm.DB, rdb *redis.Client) {
 		Redis: rdb,
 	}
 }
-
-// 测试
-func (a *App) Test() string {
-	return "test"
-}
