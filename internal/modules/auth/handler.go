@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/banyejiu/ruoyi-go/pkg/response"
+	"github.com/banyejiu/ruoyi-go/pkg/validation"
 )
 
 type Handler struct {
@@ -19,13 +20,15 @@ func NewHandler(s *Service) *Handler {
 func (h *Handler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Fail(c, response.ParamError, "invalid login request")
+		response.Fail(c, response.ParamError, validation.TranslateError(err))
 		return
 	}
 
 	data, err := h.service.Login(c.Request.Context(), req)
 	if err != nil {
 		switch {
+		case errors.Is(err, ErrCaptchaInvalid):
+			response.Fail(c, response.CaptchaInvalid, "captcha is incorrect or expired")
 		case errors.Is(err, ErrInvalidCredentials):
 			response.Fail(c, response.LoginFailed, "username or password is incorrect")
 		case errors.Is(err, ErrAccountDisabled):

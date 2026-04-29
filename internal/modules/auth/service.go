@@ -21,6 +21,7 @@ const captchaTTL = 5 * time.Minute
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrAccountDisabled    = errors.New("account disabled")
+	ErrCaptchaInvalid     = errors.New("captcha invalid")
 )
 
 type Service struct {
@@ -66,8 +67,14 @@ func (s *Service) GetCaptcha(ctx context.Context) (*CaptchaResponse, error) {
 
 func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, error) {
 	username := strings.TrimSpace(req.Username)
-	if username == "" || req.Password == "" {
+	password := strings.TrimSpace(req.Password)
+	code := strings.TrimSpace(req.Code)
+	uuid := strings.TrimSpace(req.UUID)
+	if username == "" || password == "" {
 		return nil, ErrInvalidCredentials
+	}
+	if err := s.verifyCaptcha(ctx, uuid, code); err != nil {
+		return nil, err
 	}
 
 	authUser, err := s.userRepository.FindByUserName(ctx, username)
@@ -80,6 +87,27 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, 
 	}
 
 	return s.loginUser(req, authUser)
+}
+
+func (s *Service) verifyCaptcha(ctx context.Context, uuid, code string) error {
+	if uuid == "" || code == "" {
+		return ErrCaptchaInvalid
+	}
+
+	expected, err := s.redis.GetDel(ctx, captchaCacheKey(uuid)).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return ErrCaptchaInvalid
+		}
+
+		return err
+	}
+
+	if strings.TrimSpace(expected) != strings.TrimSpace(code) {
+		return ErrCaptchaInvalid
+	}
+
+	return nil
 }
 
 func (s *Service) loginUser(req LoginRequest, authUser *user.SysUser) (*LoginResponse, error) {
