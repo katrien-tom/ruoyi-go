@@ -19,4 +19,4 @@ func Init(db *gorm.DB, rdb *redis.Client) {
 	}
 }
 
-//test ceshi hotfix
+// feature: app init
