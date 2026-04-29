@@ -6,9 +6,14 @@ import (
 	"github.com/banyejiu/ruoyi-go/internal/middleware"
 	"github.com/banyejiu/ruoyi-go/internal/modules/auth"
 	"github.com/banyejiu/ruoyi-go/internal/modules/user"
+	"github.com/banyejiu/ruoyi-go/pkg/validation"
 )
 
 func InitRouter() *gin.Engine {
+	if err := validation.Init(); err != nil {
+		panic(err)
+	}
+
 	r := gin.New()
 
 	r.Use(

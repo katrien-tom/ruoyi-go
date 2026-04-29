@@ -18,6 +18,7 @@ const (
 	Unauthorized    Code = 2001
 	LoginFailed     Code = 2002
 	AccountDisabled Code = 2003
+	CaptchaInvalid  Code = 2004
 
 	// 权限 3000-3999
 	PermissionDenied Code = 3001
