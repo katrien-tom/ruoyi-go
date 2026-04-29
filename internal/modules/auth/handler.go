@@ -17,7 +17,7 @@ func NewHandler(s *Service) *Handler {
 }
 
 func (h *Handler) Login(c *gin.Context) {
-	var req LoginDTO
+	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Fail(c, response.ParamError, "invalid login request")
 		return

@@ -1,12 +1,12 @@
 package auth
 
-type CaptchaVO struct {
+type CaptchaResponse struct {
 	CaptchaEnabled bool   `json:"captchaEnabled"`
 	Img            string `json:"img"`
 	UUID           string `json:"uuid"`
 }
 
-type LoginVO struct {
+type LoginResponse struct {
 	Token     string `json:"token"`
 	TokenType string `json:"tokenType"`
 	UserID    int64  `json:"userId"`

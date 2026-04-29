@@ -32,14 +32,14 @@
 
 - `internal/modules/<name>`
   - 业务模块目录，当前已有 `auth` 和 `user`。
-  - 模块内优先按 `router`、`handler`、`service`、`repository`、`entity`、`dto`、`vo` 分层。
+  - 模块内优先按 `router`、`handler`、`service`、`repository`、`entity`、`request`、`response` 分层。
 
 - `internal/middleware`
   - 负责请求级横切逻辑，例如 `request_id`、访问日志、panic recovery、JWT 校验、权限控制。
   - 同类逻辑优先放在这里，不要在 handler 中重复实现。
 
 - `pkg/*`
-  - 放跨模块复用的基础设施能力，例如数据库初始化、JWT、日志、统一响应。
+  - 放跨模块复用的基础设施能力，例如数据库初始化、JWT、日志、统一响应、请求参数校验。
   - `pkg` 只能向下依赖第三方库或标准库，不能反向依赖 `internal/modules`。
 
 - `sql/`
@@ -116,16 +116,16 @@
 - `entity.go`
   - 数据表实体映射。
 
-- `dto.go`
+- `request.go`
   - 请求结构体。
 
-- `vo.go`
+- `response.go`
   - 响应结构体。
 
 补充规则：
 
 - 如果模块不访问数据库，可以没有 `repository.go`。
-- 如果接口入参或出参非常简单，可以暂时不拆 `dto.go` 或 `vo.go`。
+- 如果接口入参或出参非常简单，可以暂时不拆 `request.go` 或 `response.go`。
 - 不要把大量请求/响应结构长期堆在 `handler.go`。
 - 新模块接入时，统一在 `internal/router/router.go` 的模块列表中注册。
 
@@ -142,6 +142,7 @@
 
 - `context.Context` 作为第一个参数向下传递到 repository 和外部依赖。
 - handler 不自行创建脱离请求生命周期的上下文，优先使用 `c.Request.Context()`。
+- 请求参数校验优先复用 `pkg/validation`，避免在各模块重复手写同类 `Validate()` 逻辑。
 - repository 默认使用 `db.WithContext(ctx)`。
 - handler 不直接处理 GORM、Redis、JWT 的底层细节。
 - repository 不返回 HTTP 层错误语义。

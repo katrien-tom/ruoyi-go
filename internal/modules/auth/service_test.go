@@ -74,7 +74,7 @@ func TestLoginUserSuccess(t *testing.T) {
 		now: func() time.Time { return now },
 	}
 
-	resp, err := service.loginUser(LoginDTO{
+	resp, err := service.loginUser(LoginRequest{
 		Password: "secret123",
 	}, &user.SysUser{
 		UserID:   1,
@@ -118,7 +118,7 @@ func TestLoginUserInvalidCredentials(t *testing.T) {
 		now: time.Now,
 	}
 
-	_, err = service.loginUser(LoginDTO{
+	_, err = service.loginUser(LoginRequest{
 		Password: "wrong-password",
 	}, &user.SysUser{
 		UserID:   1,
@@ -141,7 +141,7 @@ func TestLoginUserDisabledAccount(t *testing.T) {
 		now: time.Now,
 	}
 
-	_, err = service.loginUser(LoginDTO{
+	_, err = service.loginUser(LoginRequest{
 		Password: "secret123",
 	}, &user.SysUser{
 		UserID:   1,

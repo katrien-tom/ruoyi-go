@@ -37,7 +37,7 @@ func NewService(redisClient *redis.Client, userRepository *user.Repository) *Ser
 	}
 }
 
-func (s *Service) GetCaptcha(ctx context.Context) (*CaptchaVO, error) {
+func (s *Service) GetCaptcha(ctx context.Context) (*CaptchaResponse, error) {
 	driver := base64Captcha.NewDriverMath(
 		48,
 		130,
@@ -57,14 +57,14 @@ func (s *Service) GetCaptcha(ctx context.Context) (*CaptchaVO, error) {
 		return nil, err
 	}
 
-	return &CaptchaVO{
+	return &CaptchaResponse{
 		CaptchaEnabled: true,
 		Img:            item.EncodeB64string(),
 		UUID:           id,
 	}, nil
 }
 
-func (s *Service) Login(ctx context.Context, req LoginDTO) (*LoginVO, error) {
+func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, error) {
 	username := strings.TrimSpace(req.Username)
 	if username == "" || req.Password == "" {
 		return nil, ErrInvalidCredentials
@@ -82,7 +82,7 @@ func (s *Service) Login(ctx context.Context, req LoginDTO) (*LoginVO, error) {
 	return s.loginUser(req, authUser)
 }
 
-func (s *Service) loginUser(req LoginDTO, authUser *user.SysUser) (*LoginVO, error) {
+func (s *Service) loginUser(req LoginRequest, authUser *user.SysUser) (*LoginResponse, error) {
 	if authUser.Status != "0" {
 		return nil, ErrAccountDisabled
 	}
@@ -96,7 +96,7 @@ func (s *Service) loginUser(req LoginDTO, authUser *user.SysUser) (*LoginVO, err
 		return nil, err
 	}
 
-	return &LoginVO{
+	return &LoginResponse{
 		Token:     token,
 		TokenType: "Bearer",
 		UserID:    authUser.UserID,
