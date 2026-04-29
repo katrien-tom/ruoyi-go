@@ -18,3 +18,5 @@ func Init(db *gorm.DB, rdb *redis.Client) {
 		Redis: rdb,
 	}
 }
+
+//test ceshi hotfix
