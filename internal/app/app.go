@@ -18,5 +18,3 @@ func Init(db *gorm.DB, rdb *redis.Client) {
 		Redis: rdb,
 	}
 }
-
-// feature: app init
