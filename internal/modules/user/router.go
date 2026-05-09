@@ -3,7 +3,6 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/banyejiu/ruoyi-go/internal/app"
 	"github.com/banyejiu/ruoyi-go/internal/middleware"
 )
 
@@ -11,9 +10,7 @@ type Module struct {
 	handler *Handler
 }
 
-func NewModule() *Module {
-	repo := NewRepository(app.Global.DB)
-	service := NewService(repo)
+func NewModule(service *Service) *Module {
 	handler := NewHandler(service)
 
 	return &Module{handler: handler}

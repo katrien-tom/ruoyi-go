@@ -110,6 +110,9 @@ func (h *Handler) ForceLogout(c *gin.Context) {
 	response.SuccessNoMsg[any](c, nil)
 }
 
+func (h *Handler) GetRouters(c *gin.Context) {
+}
+
 func toString(value any) string {
 	s, _ := value.(string)
 	return s

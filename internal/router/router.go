@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 
+	"github.com/banyejiu/ruoyi-go/internal/app"
 	"github.com/banyejiu/ruoyi-go/internal/middleware"
 	"github.com/banyejiu/ruoyi-go/internal/modules/auth"
 	"github.com/banyejiu/ruoyi-go/internal/modules/user"
@@ -24,10 +25,13 @@ func InitRouter() *gin.Engine {
 
 	api := r.Group("/api")
 
+	userRepository := user.NewRepository(app.Global.DB)
+	userService := user.NewService(userRepository)
+
 	// 注册模块
 	modules := []Module{
-		auth.NewModule(),
-		user.NewModule(),
+		auth.NewModule(app.Global.Redis, userService),
+		user.NewModule(userService),
 	}
 
 	for _, m := range modules {
