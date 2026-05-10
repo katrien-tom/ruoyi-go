@@ -111,6 +111,19 @@ func (h *Handler) ForceLogout(c *gin.Context) {
 }
 
 func (h *Handler) GetRouters(c *gin.Context) {
+	tokenString, _ := c.Get("login_token")
+	data, err := h.service.GetRouters(c.Request.Context(), toString(tokenString))
+	if err != nil {
+		switch {
+		case errors.Is(err, security.ErrTokenInvalid), errors.Is(err, security.ErrTokenNotFound):
+			response.Fail(c, response.Unauthorized, "invalid token")
+		default:
+			response.Fail(c, response.InternalError, "failed to load routers")
+		}
+		return
+	}
+
+	response.SuccessNoMsg(c, data)
 }
 
 func toString(value any) string {

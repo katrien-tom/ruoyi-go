@@ -16,7 +16,6 @@ func NewModule(service *Service) *Module {
 	return &Module{handler: handler}
 }
 
-// ⭐ 所有路由在这里
 func (m *Module) Register(rg *gin.RouterGroup) {
 
 	public := rg.Group("/public/user")
@@ -24,21 +23,29 @@ func (m *Module) Register(rg *gin.RouterGroup) {
 		public.POST("/register", m.handler.Register)
 	}
 
-	// ========================
-	// 2️⃣ 需要登录
-	// ========================
 	private := rg.Group("/user")
 	private.Use(middleware.JWTAuth())
 	{
 		private.GET("/profile", m.handler.Profile)
 	}
 
-	// ========================
-	// 3️⃣ 权限控制
-	// ========================
-	admin := private.Group("")
-	admin.Use(middleware.Permission("user:manage"))
+	// system user management
+	system := rg.Group("/system/user")
+	system.Use(middleware.JWTAuth())
 	{
-		admin.DELETE("/:id", m.handler.Delete)
+		system.GET("/list", m.handler.List)
+		system.GET("/:userId", m.handler.GetInfo)
+		system.GET("/authRole/:userId", m.handler.GetAuthRole)
+		system.PUT("/authRole", m.handler.SaveAuthRole)
+	}
+
+	admin := system.Group("")
+	admin.Use(middleware.Permission("system:user:manage"))
+	{
+		admin.POST("/", m.handler.Add)
+		admin.PUT("/", m.handler.Edit)
+		admin.DELETE("/:userIds", m.handler.Delete)
+		admin.PUT("/resetPwd", m.handler.ResetPwd)
+		admin.PUT("/changeStatus", m.handler.ChangeStatus)
 	}
 }

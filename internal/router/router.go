@@ -6,6 +6,7 @@ import (
 	"github.com/banyejiu/ruoyi-go/internal/app"
 	"github.com/banyejiu/ruoyi-go/internal/middleware"
 	"github.com/banyejiu/ruoyi-go/internal/modules/auth"
+	"github.com/banyejiu/ruoyi-go/internal/modules/menu"
 	"github.com/banyejiu/ruoyi-go/internal/modules/user"
 	"github.com/banyejiu/ruoyi-go/pkg/validation"
 )
@@ -28,9 +29,12 @@ func InitRouter() *gin.Engine {
 	userRepository := user.NewRepository(app.Global.DB)
 	userService := user.NewService(userRepository)
 
+	menuRepository := menu.NewRepository(app.Global.DB)
+	menuService := menu.NewService(menuRepository)
+
 	// 注册模块
 	modules := []Module{
-		auth.NewModule(app.Global.Redis, userService),
+		auth.NewModule(app.Global.Redis, userService, menuService),
 		user.NewModule(userService),
 	}
 

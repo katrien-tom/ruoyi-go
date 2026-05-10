@@ -26,7 +26,26 @@ type SysUser struct {
 	Remark        *string    `gorm:"type:varchar(500);comment:备注;column:remark;" json:"remark"`
 }
 
-// TableName returns the database table name for SysUser.
 func (SysUser) TableName() string {
 	return "sys_user"
+}
+
+// SysUserRole maps to the sys_user_role table.
+type SysUserRole struct {
+	UserID int64 `gorm:"type:bigint(20);primaryKey;comment:用户ID;column:user_id;" json:"userId"`
+	RoleID int64 `gorm:"type:bigint(20);primaryKey;comment:角色ID;column:role_id;" json:"roleId"`
+}
+
+func (SysUserRole) TableName() string {
+	return "sys_user_role"
+}
+
+// SysUserPost maps to the sys_user_post table.
+type SysUserPost struct {
+	UserID int64 `gorm:"type:bigint(20);primaryKey;comment:用户ID;column:user_id;" json:"userId"`
+	PostID int64 `gorm:"type:bigint(20);primaryKey;comment:岗位ID;column:post_id;" json:"postId"`
+}
+
+func (SysUserPost) TableName() string {
+	return "sys_user_post"
 }

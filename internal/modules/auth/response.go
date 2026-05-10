@@ -24,6 +24,24 @@ type GetInfoResponse struct {
 	Permissions []string           `json:"permissions"`
 }
 
+type RouterResponse struct {
+	Name      string             `json:"name"`
+	Path      string             `json:"path"`
+	Hidden    bool               `json:"hidden"`
+	Redirect  string             `json:"redirect,omitempty"`
+	Component string             `json:"component"`
+	Query     string             `json:"query,omitempty"`
+	Meta      RouterMetaResponse `json:"meta"`
+	Children  []RouterResponse   `json:"children"`
+}
+
+type RouterMetaResponse struct {
+	Title   string `json:"title"`
+	Icon    string `json:"icon"`
+	NoCache bool   `json:"noCache"`
+	Link    string `json:"link,omitempty"`
+}
+
 type OnlineUserResponse struct {
 	TokenID    string `json:"tokenId"`
 	UserID     int64  `json:"userId"`

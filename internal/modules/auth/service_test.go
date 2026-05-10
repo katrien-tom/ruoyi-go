@@ -369,7 +369,7 @@ func TestListOnlineUsersAndForceLogout(t *testing.T) {
 func TestLoginRequiresValidCaptcha(t *testing.T) {
 	ctx := context.Background()
 	db, redisClient := integrationDependencies(t)
-	service := NewService(redisClient, user.NewService(user.NewRepository(db)))
+	service := NewService(redisClient, user.NewService(user.NewRepository(db)), nil)
 
 	_, err := service.Login(ctx, LoginRequest{
 		Username: "admin",

@@ -11,8 +11,8 @@ type Module struct {
 	handler *Handler
 }
 
-func NewModule(redisClient *redis.Client, userAuthReader UserAuthReader) *Module {
-	service := NewService(redisClient, userAuthReader)
+func NewModule(redisClient *redis.Client, userAuthReader UserAuthReader, menuReader MenuReader) *Module {
+	service := NewService(redisClient, userAuthReader, menuReader)
 	handler := NewHandler(service)
 
 	return &Module{handler: handler}

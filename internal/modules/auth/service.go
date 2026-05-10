@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"image/color"
+	"sort"
 	"net"
 	"net/http"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	"github.com/banyejiu/ruoyi-go/internal/modules/menu"
 	"github.com/banyejiu/ruoyi-go/internal/modules/user"
 	"github.com/banyejiu/ruoyi-go/internal/security"
 	"github.com/banyejiu/ruoyi-go/pkg/jwtutil"
@@ -30,6 +32,7 @@ var (
 type Service struct {
 	redis          *redis.Client
 	userAuthReader UserAuthReader
+	menuReader     MenuReader
 	tokenStore     *security.TokenStore
 	sessionService *security.SessionService
 	now            func() time.Time
@@ -41,10 +44,15 @@ type UserAuthReader interface {
 	FindRoleKeysByUserID(ctx context.Context, userID int64) ([]string, error)
 }
 
-func NewService(redisClient *redis.Client, userAuthReader UserAuthReader) *Service {
+type MenuReader interface {
+	FindByUserID(ctx context.Context, userID int64) ([]menu.SysMenu, error)
+}
+
+func NewService(redisClient *redis.Client, userAuthReader UserAuthReader, menuReader MenuReader) *Service {
 	return &Service{
 		redis:          redisClient,
 		userAuthReader: userAuthReader,
+		menuReader:     menuReader,
 		tokenStore:     security.NewTokenStore(redisClient),
 		sessionService: security.NewSessionService(security.NewTokenStore(redisClient)),
 		now:            time.Now,
@@ -133,6 +141,67 @@ func (s *Service) GetInfo(ctx context.Context, token string) (*GetInfoResponse, 
 		Roles:       defaultRoles(loginUser.Roles),
 		Permissions: defaultPermissions(loginUser.Permissions),
 	}, nil
+}
+
+func (s *Service) GetRouters(ctx context.Context, token string) ([]RouterResponse, error) {
+	loginUser, err := s.GetLoginUser(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+
+	menus, err := s.menuReader.FindByUserID(ctx, loginUser.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildRouterTree(menus, 0), nil
+}
+
+func buildRouterTree(menus []menu.SysMenu, parentID int64) []RouterResponse {
+	var routers []RouterResponse
+	for _, m := range menus {
+		if m.ParentID != parentID {
+			continue
+		}
+
+		router := RouterResponse{
+			Name:      m.RouteName,
+			Path:      m.Path,
+			Hidden:    m.Visible == "1",
+			Redirect:  "noRedirect",
+			Component: deptr(m.Component),
+			Query:     deptr(m.Query),
+			Meta: RouterMetaResponse{
+				Title:   m.MenuName,
+				Icon:    m.Icon,
+				NoCache: m.IsCache == 1,
+			},
+			Children: buildRouterTree(menus, m.MenuID),
+		}
+
+		if m.IsFrame == 0 {
+			router.Meta.Link = m.Path
+		}
+
+		if router.Component == "" {
+			router.Component = "Layout"
+		}
+
+		routers = append(routers, router)
+	}
+
+	sort.Slice(routers, func(i, j int) bool {
+		return routers[i].Name < routers[j].Name
+	})
+
+	return routers
+}
+
+func deptr(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func (s *Service) ListOnlineUsers(ctx context.Context) ([]OnlineUserResponse, error) {
