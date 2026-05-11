@@ -4,29 +4,27 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/banyejiu/ruoyi-go/internal/middleware"
+	"github.com/banyejiu/ruoyi-go/internal/route"
 )
 
-type Module struct {
-	handler *Handler
-}
-
-func NewModule(service *Service) *Module {
-	handler := NewHandler(service)
-
-	return &Module{handler: handler}
-}
-
-func (m *Module) Register(rg *gin.RouterGroup) {
-	private := rg.Group("/monitor/operlog")
-	private.Use(middleware.JWTAuth(), middleware.Permission("monitor:operlog:query"))
-	{
-		private.GET("/list", m.handler.List)
-	}
-
-	admin := private.Group("")
-	admin.Use(middleware.Permission("monitor:operlog:manage"))
-	{
-		admin.DELETE("/:operIds", m.handler.Delete)
-		admin.DELETE("/clean", m.handler.Clean)
+func (h *Handler) Routes() route.Group {
+	return route.Group{
+		Prefix:     "/monitor/operlog",
+		Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+		Children: []*route.Group{
+			{
+				Middlewares: []gin.HandlerFunc{middleware.Permission("monitor:operlog:query")},
+				Routes: []route.Route{
+					{Method: "GET", Path: "/list", Handler: h.List, Meta: route.Meta{Name: "操作日志列表"}},
+				},
+			},
+			{
+				Middlewares: []gin.HandlerFunc{middleware.Permission("monitor:operlog:manage")},
+				Routes: []route.Route{
+					{Method: "DELETE", Path: "/:operIds", Handler: h.Delete, Meta: route.Meta{Name: "删除操作日志"}},
+					{Method: "DELETE", Path: "/clean", Handler: h.Clean, Meta: route.Meta{Name: "清空操作日志"}},
+				},
+			},
+		},
 	}
 }

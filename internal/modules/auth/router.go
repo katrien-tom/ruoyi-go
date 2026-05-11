@@ -2,36 +2,27 @@ package auth
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 
 	"github.com/banyejiu/ruoyi-go/internal/middleware"
+	"github.com/banyejiu/ruoyi-go/internal/route"
 )
 
-type Module struct {
-	handler *Handler
-}
-
-func NewModule(redisClient *redis.Client, userAuthReader UserAuthReader, menuReader MenuReader) *Module {
-	service := NewService(redisClient, userAuthReader, menuReader)
-	handler := NewHandler(service)
-
-	return &Module{handler: handler}
-}
-
-func (m *Module) Register(rg *gin.RouterGroup) {
-	public := rg.Group("/public/auth")
-	{
-		public.GET("/captchaImage", m.handler.Captcha)
-		public.POST("/login", m.handler.Login)
-	}
-
-	private := rg.Group("/auth")
-	private.Use(middleware.JWTAuth())
-	{
-		private.GET("/getInfo", m.handler.GetInfo)
-		private.GET("/getRouters", m.handler.GetRouters)
-		private.POST("/logout", m.handler.Logout)
-		private.GET("/online", middleware.Permission("monitor:online:query"), m.handler.OnlineUsers)
-		private.DELETE("/online/:token", middleware.Permission("monitor:online:forceLogout"), m.handler.ForceLogout)
+func (h *Handler) Routes() route.Group {
+	return route.Group{
+		Routes: []route.Route{
+			{Method: "GET", Path: "/public/auth/captchaImage", Handler: h.Captcha, Meta: route.Meta{Name: "验证码"}},
+			{Method: "POST", Path: "/public/auth/login", Handler: h.Login, Meta: route.Meta{Name: "登录"}},
+		},
+		Children: []*route.Group{{
+			Prefix:     "/auth",
+			Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+			Routes: []route.Route{
+				{Method: "GET", Path: "/getInfo", Handler: h.GetInfo, Meta: route.Meta{Name: "用户信息"}},
+				{Method: "GET", Path: "/getRouters", Handler: h.GetRouters, Meta: route.Meta{Name: "路由信息"}},
+				{Method: "POST", Path: "/logout", Handler: h.Logout, Meta: route.Meta{Name: "登出"}},
+				{Method: "GET", Path: "/online", Handler: h.OnlineUsers, Meta: route.Meta{Name: "在线用户", Permission: "monitor:online:query"}},
+				{Method: "DELETE", Path: "/online/:token", Handler: h.ForceLogout, Meta: route.Meta{Name: "强退用户", Permission: "monitor:online:forceLogout"}},
+			},
+		}},
 	}
 }

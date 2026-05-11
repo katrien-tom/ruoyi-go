@@ -4,49 +4,45 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/banyejiu/ruoyi-go/internal/middleware"
+	"github.com/banyejiu/ruoyi-go/internal/route"
 )
 
-type Module struct {
-	handler *Handler
-}
-
-func NewModule(service *Service) *Module {
-	handler := NewHandler(service)
-
-	return &Module{handler: handler}
-}
-
-func (m *Module) Register(rg *gin.RouterGroup) {
-	private := rg.Group("/system/role")
-	private.Use(middleware.JWTAuth())
-	{
-		private.GET("/list", m.handler.List)
-		private.GET("/:roleId", m.handler.GetInfo)
-		private.GET("/deptTree/:roleId", m.handler.DeptTree)
-	}
-
-	admin := private.Group("")
-	admin.Use(middleware.Permission("system:role:manage"))
-	{
-		admin.POST("/", m.handler.Add)
-		admin.PUT("/", m.handler.Edit)
-		admin.DELETE("/:roleIds", m.handler.Delete)
-		admin.PUT("/changeStatus", m.handler.ChangeStatus)
-		admin.PUT("/dataScope", m.handler.DataScope)
-	}
-
-	authUser := rg.Group("/system/role/authUser")
-	authUser.Use(middleware.JWTAuth())
-	{
-		authUser.GET("/allocatedList", m.handler.AllocatedList)
-		authUser.GET("/unallocatedList", m.handler.UnallocatedList)
-	}
-
-	authUserAdmin := authUser.Group("")
-	authUserAdmin.Use(middleware.Permission("system:role:manage"))
-	{
-		authUserAdmin.PUT("/cancel", m.handler.CancelAuthUser)
-		authUserAdmin.PUT("/cancelAll", m.handler.CancelAuthAll)
-		authUserAdmin.PUT("/selectAll", m.handler.SelectAuthAll)
+func (h *Handler) Routes() route.Group {
+	return route.Group{
+		Children: []*route.Group{
+			{
+				Prefix:     "/system/role",
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Routes: []route.Route{
+					{Method: "GET", Path: "/list", Handler: h.List, Meta: route.Meta{Name: "角色列表", Permission: "system:role:query"}},
+					{Method: "GET", Path: "/:roleId", Handler: h.GetInfo, Meta: route.Meta{Name: "角色详情", Permission: "system:role:query"}},
+					{Method: "GET", Path: "/deptTree/:roleId", Handler: h.DeptTree, Meta: route.Meta{Name: "部门树"}},
+				},
+				Children: []*route.Group{{
+					Middlewares: []gin.HandlerFunc{middleware.Permission("system:role:manage")},
+					Routes: []route.Route{
+						{Method: "POST", Path: "/", Handler: h.Add, Meta: route.Meta{Name: "新增角色"}},
+						{Method: "PUT", Path: "/", Handler: h.Edit, Meta: route.Meta{Name: "修改角色"}},
+						{Method: "DELETE", Path: "/:roleIds", Handler: h.Delete, Meta: route.Meta{Name: "删除角色"}},
+						{Method: "PUT", Path: "/changeStatus", Handler: h.ChangeStatus, Meta: route.Meta{Name: "状态修改"}},
+						{Method: "PUT", Path: "/dataScope", Handler: h.DataScope, Meta: route.Meta{Name: "数据权限"}},
+					},
+				}},
+			},
+			{
+				Prefix:     "/system/role/authUser",
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Children: []*route.Group{{
+					Middlewares: []gin.HandlerFunc{middleware.Permission("system:role:manage")},
+					Routes: []route.Route{
+						{Method: "GET", Path: "/allocatedList", Handler: h.AllocatedList, Meta: route.Meta{Name: "已分配用户"}},
+						{Method: "GET", Path: "/unallocatedList", Handler: h.UnallocatedList, Meta: route.Meta{Name: "未分配用户"}},
+						{Method: "PUT", Path: "/cancel", Handler: h.CancelAuthUser, Meta: route.Meta{Name: "取消授权"}},
+						{Method: "PUT", Path: "/cancelAll", Handler: h.CancelAuthAll, Meta: route.Meta{Name: "批量取消授权"}},
+						{Method: "PUT", Path: "/selectAll", Handler: h.SelectAuthAll, Meta: route.Meta{Name: "批量授权"}},
+					},
+				}},
+			},
+		},
 	}
 }

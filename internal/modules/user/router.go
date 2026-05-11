@@ -4,48 +4,42 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/banyejiu/ruoyi-go/internal/middleware"
+	"github.com/banyejiu/ruoyi-go/internal/route"
 )
 
-type Module struct {
-	handler *Handler
-}
-
-func NewModule(service *Service) *Module {
-	handler := NewHandler(service)
-
-	return &Module{handler: handler}
-}
-
-func (m *Module) Register(rg *gin.RouterGroup) {
-
-	public := rg.Group("/public/user")
-	{
-		public.POST("/register", m.handler.Register)
-	}
-
-	private := rg.Group("/user")
-	private.Use(middleware.JWTAuth())
-	{
-		private.GET("/profile", m.handler.Profile)
-	}
-
-	// system user management
-	system := rg.Group("/system/user")
-	system.Use(middleware.JWTAuth())
-	{
-		system.GET("/list", m.handler.List)
-		system.GET("/:userId", m.handler.GetInfo)
-		system.GET("/authRole/:userId", m.handler.GetAuthRole)
-		system.PUT("/authRole", m.handler.SaveAuthRole)
-	}
-
-	admin := system.Group("")
-	admin.Use(middleware.Permission("system:user:manage"))
-	{
-		admin.POST("/", m.handler.Add)
-		admin.PUT("/", m.handler.Edit)
-		admin.DELETE("/:userIds", m.handler.Delete)
-		admin.PUT("/resetPwd", m.handler.ResetPwd)
-		admin.PUT("/changeStatus", m.handler.ChangeStatus)
+func (h *Handler) Routes() route.Group {
+	return route.Group{
+		Routes: []route.Route{
+			{Method: "POST", Path: "/public/user/register", Handler: h.Register},
+		},
+		Children: []*route.Group{
+			{
+				Prefix:     "/user",
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Routes: []route.Route{
+					{Method: "GET", Path: "/profile", Handler: h.Profile, Meta: route.Meta{Name: "个人信息"}},
+				},
+			},
+			{
+				Prefix:     "/system/user",
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Routes: []route.Route{
+					{Method: "GET", Path: "/list", Handler: h.List, Meta: route.Meta{Name: "用户列表", Permission: "system:user:query"}},
+					{Method: "GET", Path: "/:userId", Handler: h.GetInfo, Meta: route.Meta{Name: "用户详情", Permission: "system:user:query"}},
+				},
+				Children: []*route.Group{{
+					Middlewares: []gin.HandlerFunc{middleware.Permission("system:user:manage")},
+					Routes: []route.Route{
+						{Method: "POST", Path: "/", Handler: h.Add, Meta: route.Meta{Name: "新增用户"}},
+						{Method: "PUT", Path: "/", Handler: h.Edit, Meta: route.Meta{Name: "修改用户"}},
+						{Method: "DELETE", Path: "/:userIds", Handler: h.Delete, Meta: route.Meta{Name: "删除用户"}},
+						{Method: "PUT", Path: "/resetPwd", Handler: h.ResetPwd, Meta: route.Meta{Name: "重置密码"}},
+						{Method: "PUT", Path: "/changeStatus", Handler: h.ChangeStatus, Meta: route.Meta{Name: "状态修改"}},
+						{Method: "GET", Path: "/authRole/:userId", Handler: h.GetAuthRole, Meta: route.Meta{Name: "分配角色"}},
+						{Method: "PUT", Path: "/authRole", Handler: h.SaveAuthRole, Meta: route.Meta{Name: "保存角色"}},
+					},
+				}},
+			},
+		},
 	}
 }
