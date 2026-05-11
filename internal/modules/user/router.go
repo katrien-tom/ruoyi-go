@@ -3,45 +3,43 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/banyejiu/ruoyi-go/internal/app"
 	"github.com/banyejiu/ruoyi-go/internal/middleware"
+	"github.com/banyejiu/ruoyi-go/internal/route"
 )
 
-type Module struct {
-	handler *Handler
-}
-
-func NewModule() *Module {
-	repo := NewRepository(app.Global.DB)
-	service := NewService(repo)
-	handler := NewHandler(service)
-
-	return &Module{handler: handler}
-}
-
-// ⭐ 所有路由在这里
-func (m *Module) Register(rg *gin.RouterGroup) {
-
-	public := rg.Group("/public/user")
-	{
-		public.POST("/register", m.handler.Register)
-	}
-
-	// ========================
-	// 2️⃣ 需要登录
-	// ========================
-	private := rg.Group("/user")
-	private.Use(middleware.JWTAuth())
-	{
-		private.GET("/profile", m.handler.Profile)
-	}
-
-	// ========================
-	// 3️⃣ 权限控制
-	// ========================
-	admin := private.Group("")
-	admin.Use(middleware.Permission("user:manage"))
-	{
-		admin.DELETE("/:id", m.handler.Delete)
+func (h *Handler) Routes() route.Group {
+	return route.Group{
+		Routes: []route.Route{
+			{Method: "POST", Path: "/public/user/register", Handler: h.Register},
+		},
+		Children: []*route.Group{
+			{
+				Prefix:     "/user",
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Routes: []route.Route{
+					{Method: "GET", Path: "/profile", Handler: h.Profile, Meta: route.Meta{Name: "个人信息"}},
+				},
+			},
+			{
+				Prefix:     "/system/user",
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Routes: []route.Route{
+					{Method: "GET", Path: "/list", Handler: h.List, Meta: route.Meta{Name: "用户列表", Permission: "system:user:query"}},
+					{Method: "GET", Path: "/:userId", Handler: h.GetInfo, Meta: route.Meta{Name: "用户详情", Permission: "system:user:query"}},
+				},
+				Children: []*route.Group{{
+					Middlewares: []gin.HandlerFunc{middleware.Permission("system:user:manage")},
+					Routes: []route.Route{
+						{Method: "POST", Path: "/", Handler: h.Add, Meta: route.Meta{Name: "新增用户"}},
+						{Method: "PUT", Path: "/", Handler: h.Edit, Meta: route.Meta{Name: "修改用户"}},
+						{Method: "DELETE", Path: "/:userIds", Handler: h.Delete, Meta: route.Meta{Name: "删除用户"}},
+						{Method: "PUT", Path: "/resetPwd", Handler: h.ResetPwd, Meta: route.Meta{Name: "重置密码"}},
+						{Method: "PUT", Path: "/changeStatus", Handler: h.ChangeStatus, Meta: route.Meta{Name: "状态修改"}},
+						{Method: "GET", Path: "/authRole/:userId", Handler: h.GetAuthRole, Meta: route.Meta{Name: "分配角色"}},
+						{Method: "PUT", Path: "/authRole", Handler: h.SaveAuthRole, Meta: route.Meta{Name: "保存角色"}},
+					},
+				}},
+			},
+		},
 	}
 }

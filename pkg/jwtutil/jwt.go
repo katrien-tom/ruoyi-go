@@ -20,21 +20,23 @@ var (
 type Claims struct {
 	UserID   int64  `json:"user_id"`
 	Username string `json:"username,omitempty"`
+	Token    string `json:"token,omitempty"`
 	jwt.RegisteredClaims
 }
 
-func Sign(userID int64, userName string, now time.Time) (string, error) {
+func Sign(userID int64, userName, loginToken string, now time.Time) (string, error) {
 	claims := Claims{
 		UserID:   userID,
 		Username: userName,
+		Token:    loginToken,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(defaultJWTTTL)),
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(secret())
+	signedToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return signedToken.SignedString(secret())
 }
 
 func Parse(tokenString string) (*Claims, error) {
@@ -61,6 +63,10 @@ func Parse(tokenString string) (*Claims, error) {
 	}
 
 	return claims, nil
+}
+
+func ExpiresAt(now time.Time) time.Time {
+	return now.Add(defaultJWTTTL)
 }
 
 func secret() []byte {

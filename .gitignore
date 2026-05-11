@@ -1,5 +1,6 @@
 .codex
 .worktrees/
+.agents/
 
 # Local runtime config
 config.yml
@@ -25,3 +26,4 @@ tmp/
 .DS_Store
 .idea/
 .vscode/
+.ace-tool/
