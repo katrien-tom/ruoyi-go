@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+
+	"github.com/banyejiu/ruoyi-go/pkg/constants"
 )
 
 type Repository struct {
@@ -19,7 +21,7 @@ func NewRepository(db *gorm.DB) *Repository {
 func (r *Repository) FindByUserName(ctx context.Context, userName string) (*SysUser, error) {
 	var u SysUser
 	if err := r.db.WithContext(ctx).
-		Where("user_name = ? AND del_flag = ?", userName, "0").
+		Where("user_name = ? AND del_flag = ?", userName, constants.DelFlagNormal).
 		First(&u).Error; err != nil {
 		return nil, err
 	}
@@ -29,7 +31,7 @@ func (r *Repository) FindByUserName(ctx context.Context, userName string) (*SysU
 func (r *Repository) FindByID(ctx context.Context, userID int64) (*SysUser, error) {
 	var u SysUser
 	if err := r.db.WithContext(ctx).
-		Where("user_id = ? AND del_flag = ?", userID, "0").
+		Where("user_id = ? AND del_flag = ?", userID, constants.DelFlagNormal).
 		First(&u).Error; err != nil {
 		return nil, err
 	}
@@ -43,7 +45,7 @@ func (r *Repository) FindPermissionsByUserID(ctx context.Context, userID int64) 
 		Select("DISTINCT m.perms").
 		Joins("JOIN sys_role_menu rm ON rm.menu_id = m.menu_id").
 		Joins("JOIN sys_user_role ur ON ur.role_id = rm.role_id").
-		Where("ur.user_id = ? AND m.status = ? AND m.perms <> '' AND m.perms IS NOT NULL", userID, "0").
+		Where("ur.user_id = ? AND m.status = ? AND m.perms <> '' AND m.perms IS NOT NULL", userID, constants.StatusNormal).
 		Scan(&permissions).Error
 	if err != nil {
 		return nil, err
@@ -57,7 +59,7 @@ func (r *Repository) FindRoleKeysByUserID(ctx context.Context, userID int64) ([]
 		Table("sys_role r").
 		Select("DISTINCT r.role_key").
 		Joins("JOIN sys_user_role ur ON ur.role_id = r.role_id").
-		Where("ur.user_id = ? AND r.status = ? AND r.del_flag = ? AND r.role_key <> ''", userID, "0", "0").
+		Where("ur.user_id = ? AND r.status = ? AND r.del_flag = ? AND r.role_key <> ''", userID, constants.StatusNormal, constants.DelFlagNormal).
 		Scan(&roleKeys).Error
 	if err != nil {
 		return nil, err
@@ -81,7 +83,7 @@ func (r *Repository) FindAll(ctx context.Context, offset, limit int, filter user
 		Table("sys_user u").
 		Select("u.*, d.dept_name").
 		Joins("LEFT JOIN sys_dept d ON u.dept_id = d.dept_id").
-		Where("u.del_flag = ?", "0")
+		Where("u.del_flag = ?", constants.DelFlagNormal)
 
 	if filter.UserName != "" {
 		base = base.Where("u.user_name LIKE ?", "%"+filter.UserName+"%")
@@ -158,7 +160,7 @@ func (r *Repository) SoftDelete(ctx context.Context, userIDs []int64) error {
 		Model(&SysUser{}).
 		Where("user_id IN ?", userIDs).
 		Updates(map[string]any{
-			"del_flag":    "2",
+			"del_flag":    constants.DelFlagDeleted,
 			"update_time": now,
 		}).Error
 }
@@ -215,7 +217,7 @@ func (r *Repository) ExistsByUserNameExcluding(ctx context.Context, userName str
 	var count int64
 	err := r.db.WithContext(ctx).
 		Model(&SysUser{}).
-		Where("user_name = ? AND del_flag = ? AND user_id <> ?", userName, "0", excludeID).
+		Where("user_name = ? AND del_flag = ? AND user_id <> ?", userName, constants.DelFlagNormal, excludeID).
 		Count(&count).Error
 	return count > 0, err
 }
@@ -227,7 +229,7 @@ func (r *Repository) ExistsByPhonenumberExcluding(ctx context.Context, phonenumb
 	var count int64
 	err := r.db.WithContext(ctx).
 		Model(&SysUser{}).
-		Where("phonenumber = ? AND del_flag = ? AND user_id <> ?", phonenumber, "0", excludeID).
+		Where("phonenumber = ? AND del_flag = ? AND user_id <> ?", phonenumber, constants.DelFlagNormal, excludeID).
 		Count(&count).Error
 	return count > 0, err
 }
@@ -239,7 +241,7 @@ func (r *Repository) ExistsByEmailExcluding(ctx context.Context, email string, e
 	var count int64
 	err := r.db.WithContext(ctx).
 		Model(&SysUser{}).
-		Where("email = ? AND del_flag = ? AND user_id <> ?", email, "0", excludeID).
+		Where("email = ? AND del_flag = ? AND user_id <> ?", email, constants.DelFlagNormal, excludeID).
 		Count(&count).Error
 	return count > 0, err
 }
@@ -274,7 +276,7 @@ func (r *Repository) FindDeptByID(ctx context.Context, deptID int64) (*struct {
 	err := r.db.WithContext(ctx).
 		Table("sys_dept").
 		Select("dept_id, dept_name").
-		Where("dept_id = ? AND del_flag = ?", deptID, "0").
+		Where("dept_id = ? AND del_flag = ?", deptID, constants.DelFlagNormal).
 		First(&result).Error
 	if err != nil {
 		return nil, err
@@ -287,7 +289,7 @@ func (r *Repository) FindAllRoles(ctx context.Context) ([]RoleInfo, error) {
 	err := r.db.WithContext(ctx).
 		Table("sys_role").
 		Select("role_id, role_name, role_key").
-		Where("status = ? AND del_flag = ?", "0", "0").
+		Where("status = ? AND del_flag = ?", constants.StatusNormal, constants.DelFlagNormal).
 		Order("role_sort").
 		Scan(&roles).Error
 	return roles, err
@@ -319,7 +321,7 @@ func (r *Repository) SelectPostList(ctx context.Context) ([]map[string]any, erro
 	err := r.db.WithContext(ctx).
 		Table("sys_post").
 		Select("post_id as value, post_name as label").
-		Where("status = ?", "0").
+		Where("status = ?", constants.StatusNormal).
 		Order("post_sort").
 		Scan(&result).Error
 	return result, err
@@ -331,7 +333,7 @@ func (r *Repository) CheckUserDataScope(ctx context.Context, targetUserID, login
 	var count int64
 	err := r.db.WithContext(ctx).
 		Model(&SysUser{}).
-		Where("user_id = ? AND del_flag = ?", targetUserID, "0").
+		Where("user_id = ? AND del_flag = ?", targetUserID, constants.DelFlagNormal).
 		Count(&count).Error
 	if err != nil {
 		return false, err

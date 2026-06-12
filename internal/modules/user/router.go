@@ -15,14 +15,14 @@ func (h *Handler) Routes() route.Group {
 		Children: []*route.Group{
 			{
 				Prefix:     "/user",
-				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 				Routes: []route.Route{
 					{Method: "GET", Path: "/profile", Handler: h.Profile, Meta: route.Meta{Name: "个人信息"}},
 				},
 			},
 			{
 				Prefix:     "/system/user",
-				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 				Routes: []route.Route{
 					{Method: "GET", Path: "/list", Handler: h.List, Meta: route.Meta{Name: "用户列表", Permission: "system:user:query"}},
 					{Method: "GET", Path: "/:userId", Handler: h.GetInfo, Meta: route.Meta{Name: "用户详情", Permission: "system:user:query"}},

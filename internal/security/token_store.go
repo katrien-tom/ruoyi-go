@@ -10,9 +10,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
-)
 
-const tokenCachePrefix = "login_tokens:"
+	"github.com/banyejiu/ruoyi-go/pkg/constants"
+)
 
 type TokenStore struct {
 	redis *redis.Client
@@ -58,7 +58,7 @@ func (s *TokenStore) Save(ctx context.Context, loginUser *LoginUser) error {
 		return errors.New("login session expired")
 	}
 
-	return s.redis.Set(ctx, tokenCacheKey(loginUser.Token), payload, ttl).Err()
+	return s.redis.Set(ctx, constants.LoginTokenCacheKey(loginUser.Token), payload, ttl).Err()
 }
 
 func (s *TokenStore) Get(ctx context.Context, token string) (*LoginUser, error) {
@@ -66,7 +66,7 @@ func (s *TokenStore) Get(ctx context.Context, token string) (*LoginUser, error) 
 		return nil, errors.New("token store unavailable")
 	}
 
-	payload, err := s.redis.Get(ctx, tokenCacheKey(token)).Bytes()
+	payload, err := s.redis.Get(ctx, constants.LoginTokenCacheKey(token)).Bytes()
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (s *TokenStore) Delete(ctx context.Context, token string) error {
 		return errors.New("token store unavailable")
 	}
 
-	return s.redis.Del(ctx, tokenCacheKey(token)).Err()
+	return s.redis.Del(ctx, constants.LoginTokenCacheKey(token)).Err()
 }
 
 func (s *TokenStore) Keys(ctx context.Context) ([]string, error) {
@@ -92,7 +92,7 @@ func (s *TokenStore) Keys(ctx context.Context) ([]string, error) {
 		return nil, errors.New("token store unavailable")
 	}
 
-	keys, err := s.redis.Keys(ctx, tokenCachePrefix+"*").Result()
+	keys, err := s.redis.Keys(ctx, constants.RedisPrefixLoginToken+"*").Result()
 	if err != nil {
 		return nil, err
 	}
@@ -101,10 +101,6 @@ func (s *TokenStore) Keys(ctx context.Context) ([]string, error) {
 	return keys, nil
 }
 
-func tokenCacheKey(token string) string {
-	return tokenCachePrefix + token
-}
-
 func tokenFromCacheKey(key string) string {
-	return strings.TrimPrefix(key, tokenCachePrefix)
+	return strings.TrimPrefix(key, constants.RedisPrefixLoginToken)
 }

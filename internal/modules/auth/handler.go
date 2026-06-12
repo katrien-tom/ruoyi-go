@@ -11,11 +11,15 @@ import (
 )
 
 type Handler struct {
-	service *Service
+	service        *Service
+	sessionService *security.SessionService
 }
 
-func NewHandler(s *Service) *Handler {
-	return &Handler{service: s}
+func NewHandler(s *Service, sessionService *security.SessionService) *Handler {
+	return &Handler{
+		service:        s,
+		sessionService: sessionService,
+	}
 }
 
 func (h *Handler) Login(c *gin.Context) {

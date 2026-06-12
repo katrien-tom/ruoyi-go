@@ -10,7 +10,7 @@ import (
 func (h *Handler) Routes() route.Group {
 	return route.Group{
 		Prefix:     "/monitor/operlog",
-		Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+		Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 		Children: []*route.Group{
 			{
 				Middlewares: []gin.HandlerFunc{middleware.Permission("monitor:operlog:query")},

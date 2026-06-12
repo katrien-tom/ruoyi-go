@@ -18,6 +18,7 @@ import (
 	"github.com/banyejiu/ruoyi-go/internal/modules/menu"
 	"github.com/banyejiu/ruoyi-go/internal/modules/user"
 	"github.com/banyejiu/ruoyi-go/internal/security"
+	"github.com/banyejiu/ruoyi-go/pkg/constants"
 	"github.com/banyejiu/ruoyi-go/pkg/jwtutil"
 )
 
@@ -75,7 +76,7 @@ func (s *Service) GetCaptcha(ctx context.Context) (*CaptchaResponse, error) {
 		return nil, err
 	}
 
-	if err := s.redis.Set(ctx, captchaCacheKey(id), answer, captchaTTL).Err(); err != nil {
+	if err := s.redis.Set(ctx, constants.CaptchaCacheKey(id), answer, captchaTTL).Err(); err != nil {
 		return nil, err
 	}
 
@@ -167,19 +168,19 @@ func buildRouterTree(menus []menu.SysMenu, parentID int64) []RouterResponse {
 		router := RouterResponse{
 			Name:      m.RouteName,
 			Path:      m.Path,
-			Hidden:    m.Visible == "1",
+			Hidden:    m.Visible == constants.VisibleHidden,
 			Redirect:  "noRedirect",
 			Component: deptr(m.Component),
 			Query:     deptr(m.Query),
 			Meta: RouterMetaResponse{
 				Title:   m.MenuName,
 				Icon:    m.Icon,
-				NoCache: m.IsCache == 1,
+				NoCache: m.IsCache == constants.IsCacheYes,
 			},
 			Children: buildRouterTree(menus, m.MenuID),
 		}
 
-		if m.IsFrame == 0 {
+		if m.IsFrame == constants.IsFrameNo {
 			router.Meta.Link = m.Path
 		}
 
@@ -243,7 +244,7 @@ func (s *Service) verifyCaptcha(ctx context.Context, uuid, code string) error {
 		return ErrCaptchaInvalid
 	}
 
-	expected, err := s.redis.GetDel(ctx, captchaCacheKey(uuid)).Result()
+	expected, err := s.redis.GetDel(ctx, constants.CaptchaCacheKey(uuid)).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return ErrCaptchaInvalid
@@ -260,7 +261,7 @@ func (s *Service) verifyCaptcha(ctx context.Context, uuid, code string) error {
 }
 
 func (s *Service) loginUser(ctx context.Context, req LoginRequest, authUser *user.SysUser, meta LoginMeta) (*LoginResponse, error) {
-	if authUser.Status != "0" {
+	if authUser.Status != constants.StatusNormal {
 		return nil, ErrAccountDisabled
 	}
 
@@ -413,8 +414,4 @@ func detectOS(userAgent string) string {
 	default:
 		return "Unknown"
 	}
-}
-
-func captchaCacheKey(uuid string) string {
-	return "captcha_codes:" + uuid
 }

@@ -14,8 +14,8 @@ func (h *Handler) Routes() route.Group {
 			{Method: "POST", Path: "/public/auth/login", Handler: h.Login, Meta: route.Meta{Name: "登录"}},
 		},
 		Children: []*route.Group{{
-			Prefix:     "/auth",
-			Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+			Prefix:      "/auth",
+			Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 			Routes: []route.Route{
 				{Method: "GET", Path: "/getInfo", Handler: h.GetInfo, Meta: route.Meta{Name: "用户信息"}},
 				{Method: "GET", Path: "/getRouters", Handler: h.GetRouters, Meta: route.Meta{Name: "路由信息"}},

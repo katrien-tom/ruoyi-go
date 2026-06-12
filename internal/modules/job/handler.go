@@ -1,17 +1,19 @@
 package job
 
 import (
+	"github.com/banyejiu/ruoyi-go/internal/security"
 	"github.com/gin-gonic/gin"
 
 	"github.com/banyejiu/ruoyi-go/pkg/response"
 )
 
 type Handler struct {
+	sessionService *security.SessionService
 	service *Service
 }
 
-func NewHandler(s *Service) *Handler {
-	return &Handler{service: s}
+func NewHandler(s *Service, sessionService *security.SessionService) *Handler {
+	return &Handler{service: s, sessionService: sessionService}
 }
 
 func (h *Handler) JobList(c *gin.Context) {

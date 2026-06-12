@@ -12,7 +12,7 @@ func (h *Handler) Routes() route.Group {
 		Children: []*route.Group{
 			{
 				Prefix:     "/system/dict/type",
-				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 				Children: []*route.Group{
 					{
 						Middlewares: []gin.HandlerFunc{middleware.Permission("system:dict:query")},
@@ -34,7 +34,7 @@ func (h *Handler) Routes() route.Group {
 			},
 			{
 				Prefix:     "/system/dict/data",
-				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 				Routes: []route.Route{
 					{Method: "GET", Path: "/type/:dictType", Handler: h.DataByType, Meta: route.Meta{Name: "字典数据(类型)"}},
 				},

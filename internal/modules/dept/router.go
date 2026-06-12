@@ -10,7 +10,7 @@ import (
 func (h *Handler) Routes() route.Group {
 	return route.Group{
 		Prefix:     "/system/dept",
-		Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+		Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 		Routes: []route.Route{
 			{Method: "GET", Path: "/list", Handler: h.List, Meta: route.Meta{Name: "部门列表"}},
 			{Method: "GET", Path: "/treeselect", Handler: h.TreeSelect, Meta: route.Meta{Name: "部门树"}},

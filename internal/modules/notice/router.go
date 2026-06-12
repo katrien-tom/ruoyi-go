@@ -10,7 +10,7 @@ import (
 func (h *Handler) Routes() route.Group {
 	return route.Group{
 		Prefix:     "/system/notice",
-		Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+		Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 		Children: []*route.Group{
 			{
 				Middlewares: []gin.HandlerFunc{middleware.Permission("system:notice:query")},

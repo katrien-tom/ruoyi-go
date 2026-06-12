@@ -21,6 +21,7 @@ import (
 
 	"github.com/banyejiu/ruoyi-go/internal/modules/user"
 	"github.com/banyejiu/ruoyi-go/internal/security"
+	"github.com/banyejiu/ruoyi-go/pkg/constants"
 	"github.com/banyejiu/ruoyi-go/pkg/database"
 	"github.com/banyejiu/ruoyi-go/pkg/jwtutil"
 	"github.com/banyejiu/ruoyi-go/pkg/logger"
@@ -408,11 +409,11 @@ func TestLoginSuccessAfterCaptchaVerification(t *testing.T) {
 	})
 
 	uuid := "captcha-" + strconv.FormatInt(time.Now().UnixNano(), 10)
-	if err := redisClient.Set(ctx, captchaCacheKey(uuid), "8", time.Minute).Err(); err != nil {
+	if err := redisClient.Set(ctx, constants.CaptchaCacheKey(uuid), "8", time.Minute).Err(); err != nil {
 		t.Fatalf("seed captcha: %v", err)
 	}
 	t.Cleanup(func() {
-		if err := redisClient.Del(context.Background(), captchaCacheKey(uuid)).Err(); err != nil {
+		if err := redisClient.Del(context.Background(), constants.CaptchaCacheKey(uuid)).Err(); err != nil {
 			t.Fatalf("cleanup captcha: %v", err)
 		}
 	})
@@ -450,7 +451,7 @@ func TestLoginSuccessAfterCaptchaVerification(t *testing.T) {
 	if resp.ExpiresAt <= now.UnixMilli() {
 		t.Fatalf("expected expiresAt after login time, got %d", resp.ExpiresAt)
 	}
-	if _, err := redisClient.Get(ctx, captchaCacheKey(uuid)).Result(); !errors.Is(err, redis.Nil) {
+	if _, err := redisClient.Get(ctx, constants.CaptchaCacheKey(uuid)).Result(); !errors.Is(err, redis.Nil) {
 		t.Fatalf("expected captcha to be consumed, got err=%v", err)
 	}
 

@@ -57,6 +57,11 @@ func Init() error {
 			initErr = err
 			return
 		}
+
+		if err := RegisterCustomValidators(engine); err != nil {
+			initErr = err
+			return
+		}
 	})
 
 	return initErr

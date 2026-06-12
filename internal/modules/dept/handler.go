@@ -1,6 +1,7 @@
 package dept
 
 import (
+	"github.com/banyejiu/ruoyi-go/internal/security"
 	"errors"
 	"strconv"
 
@@ -11,11 +12,12 @@ import (
 )
 
 type Handler struct {
+	sessionService *security.SessionService
 	service *Service
 }
 
-func NewHandler(s *Service) *Handler {
-	return &Handler{service: s}
+func NewHandler(s *Service, sessionService *security.SessionService) *Handler {
+	return &Handler{service: s, sessionService: sessionService}
 }
 
 func (h *Handler) List(c *gin.Context) {

@@ -4,21 +4,14 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/banyejiu/ruoyi-go/internal/app"
 	"github.com/banyejiu/ruoyi-go/internal/security"
 	"github.com/banyejiu/ruoyi-go/pkg/jwtutil"
 	"github.com/banyejiu/ruoyi-go/pkg/response"
 	"github.com/gin-gonic/gin"
 )
 
-func JWTAuth() gin.HandlerFunc {
+func JWTAuth(sessionService *security.SessionService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if app.Global == nil || app.Global.Redis == nil {
-			response.FailAbort(c, response.InternalError, "redis unavailable")
-			return
-		}
-
-		sessionService := security.NewSessionService(security.NewTokenStore(app.Global.Redis))
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			abortUnauthorized(c, "missing authorization header")

@@ -12,7 +12,7 @@ func (h *Handler) Routes() route.Group {
 		Children: []*route.Group{
 			{
 				Prefix:     "/system/role",
-				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 				Routes: []route.Route{
 					{Method: "GET", Path: "/list", Handler: h.List, Meta: route.Meta{Name: "角色列表", Permission: "system:role:query"}},
 					{Method: "GET", Path: "/:roleId", Handler: h.GetInfo, Meta: route.Meta{Name: "角色详情", Permission: "system:role:query"}},
@@ -31,7 +31,7 @@ func (h *Handler) Routes() route.Group {
 			},
 			{
 				Prefix:     "/system/role/authUser",
-				Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+				Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 				Children: []*route.Group{{
 					Middlewares: []gin.HandlerFunc{middleware.Permission("system:role:manage")},
 					Routes: []route.Route{

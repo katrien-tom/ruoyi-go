@@ -10,7 +10,7 @@ import (
 func (h *Handler) Routes() route.Group {
 	return route.Group{
 		Prefix:     "/system/config",
-		Middlewares: []gin.HandlerFunc{middleware.JWTAuth()},
+		Middlewares: []gin.HandlerFunc{middleware.JWTAuth(h.sessionService)},
 		Routes: []route.Route{
 			{Method: "GET", Path: "/configKey/:configKey", Handler: h.GetByKey, Meta: route.Meta{Name: "参数键值"}},
 		},
